@@ -1,85 +1,114 @@
-import React, { useState } from "react";
+import { useDisclosure } from "@nextui-org/react";
+import React, { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import CogTooth from "#/assets/cog-tooth";
+import ChatInterface from "#/components/chat/ChatInterface";
+import Errors from "#/components/Errors";
+import { Container, Orientation } from "#/components/Resizable";
+import Workspace from "#/components/Workspace";
+import LoadPreviousSessionModal from "#/components/modals/load-previous-session/LoadPreviousSessionModal";
+import SettingsModal from "#/components/modals/settings/SettingsModal";
 import "./App.css";
-import ChatInterface from "./components/ChatInterface";
-import Terminal from "./components/Terminal";
-import Planner from "./components/Planner";
-import CodeEditor from "./components/CodeEditor";
-import Browser from "./components/Browser";
-import Errors from "./components/Errors";
-import BannerSettings from "./components/BannerSettings";
+import AgentControlBar from "./components/AgentControlBar";
+import AgentStatusBar from "./components/AgentStatusBar";
+import VolumeIcon from "./components/VolumeIcon";
+import Terminal from "./components/terminal/Terminal";
+import Session from "#/services/session";
+import { getToken } from "#/services/auth";
+import { settingsAreUpToDate } from "#/services/settings";
 
-const TAB_OPTIONS = ["terminal", "planner", "code", "browser"] as const;
-type TabOption = (typeof TAB_OPTIONS)[number];
+interface Props {
+  setSettingOpen: (isOpen: boolean) => void;
+}
 
-type TabProps = {
-  name: string;
-  active: boolean;
-  onClick: () => void;
-};
-function Tab({ name, active, onClick }: TabProps): JSX.Element {
+function Controls({ setSettingOpen }: Props): JSX.Element {
   return (
-    <div
-      className={`tab ${active ? "tab-active" : ""}`}
-      onClick={() => onClick()}
-    >
-      <p className="font-bold">{name}</p>
+    <div className="flex w-full p-4 bg-neutral-900 items-center shrink-0 justify-between">
+      <div className="flex items-center gap-4">
+        <AgentControlBar />
+      </div>
+      <AgentStatusBar />
+
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ marginRight: "8px" }}>
+          <VolumeIcon />
+        </div>
+        <div
+          className="cursor-pointer hover:opacity-80 transition-all"
+          onClick={() => setSettingOpen(true)}
+        >
+          <CogTooth />
+        </div>
+      </div>
     </div>
   );
 }
 
-const tabData = {
-  terminal: {
-    name: "Terminal",
-    component: null,
-  },
-  planner: {
-    name: "Planner",
-    component: <Planner key="planner" />,
-  },
-  code: {
-    name: "Code Editor",
-    component: <CodeEditor key="code" />,
-  },
-  browser: {
-    name: "Browser",
-    component: <Browser key="browser" />,
-  },
-};
+// React.StrictMode will cause double rendering, use this to prevent it
+let initOnce = false;
 
 function App(): JSX.Element {
-  const [activeTab, setActiveTab] = useState<TabOption>("terminal");
+  const {
+    isOpen: settingsModalIsOpen,
+    onOpen: onSettingsModalOpen,
+    onOpenChange: onSettingsModalOpenChange,
+  } = useDisclosure();
+
+  const {
+    isOpen: loadPreviousSessionModalIsOpen,
+    onOpen: onLoadPreviousSessionModalOpen,
+    onOpenChange: onLoadPreviousSessionModalOpenChange,
+  } = useDisclosure();
+
+  useEffect(() => {
+    if (initOnce) return;
+    initOnce = true;
+
+    if (!settingsAreUpToDate()) {
+      onSettingsModalOpen();
+    } else if (getToken()) {
+      onLoadPreviousSessionModalOpen();
+    } else {
+      Session.startNewSession();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="app flex">
-      <Errors />
-      <div className="left-pane">
-        <ChatInterface />
-      </div>
-      <div className="right-pane">
-        <div className="navbar bg-base-100">
-          <div className="flex-1">
-            <div className="btn btn-ghost text-xl xl:w-full xl:h-full h-1/2 w-1/2 ml-4">
-              OpenDevin Workspace
-            </div>
-          </div>
-          <div className="flex">
-            <BannerSettings />
-          </div>
-        </div>
-        <div role="tablist" className="tabs tabs-bordered tabs-lg bg-base-100">
-          {TAB_OPTIONS.map((tab) => (
-            <Tab
-              key={tab}
-              name={tabData[tab].name}
-              active={activeTab === tab}
-              onClick={() => setActiveTab(tab)}
+    <div className="h-screen w-screen flex flex-col">
+      <div className="flex grow bg-neutral-900 text-white min-h-0">
+        <Container
+          orientation={Orientation.HORIZONTAL}
+          className="grow h-full min-h-0 min-w-0 px-3 pt-3"
+          initialSize={500}
+          firstChild={<ChatInterface />}
+          firstClassName="min-w-[500px] rounded-xl overflow-hidden border border-neutral-600"
+          secondChild={
+            <Container
+              orientation={Orientation.VERTICAL}
+              className="grow h-full min-h-0 min-w-0"
+              initialSize={window.innerHeight - 300}
+              firstChild={<Workspace />}
+              firstClassName="min-h-72 rounded-xl border border-neutral-600 bg-neutral-800 flex flex-col overflow-hidden"
+              secondChild={<Terminal />}
+              secondClassName="min-h-72 rounded-xl border border-neutral-600 bg-neutral-800"
             />
-          ))}
-        </div>
-        {/* Keep terminal permanently open - see component for more details */}
-        <Terminal key="terminal" hidden={activeTab !== "terminal"} />
-        {tabData[activeTab].component}
+          }
+          secondClassName="flex flex-col overflow-hidden grow min-w-[500px]"
+        />
       </div>
+      <Controls setSettingOpen={onSettingsModalOpen} />
+      <SettingsModal
+        isOpen={settingsModalIsOpen}
+        onOpenChange={onSettingsModalOpenChange}
+      />
+      <LoadPreviousSessionModal
+        isOpen={loadPreviousSessionModalIsOpen}
+        onOpenChange={onLoadPreviousSessionModalOpenChange}
+      />
+      <Errors />
+      <Toaster />
     </div>
   );
 }

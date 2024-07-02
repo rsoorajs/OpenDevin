@@ -4,19 +4,7 @@ This is a WebSocket server that executes tasks using an agent.
 
 ## Install
 
-Create a `.env` file with the contents
-
-```sh
-LLM_API_KEY=<YOUR OPENAI API KEY>
-```
-
-Install requirements:
-
-```sh
-python3.12 -m venv venv
-source venv/bin/activate
-python -m pip install -r requirements.txt
-```
+Follow the instructions in the base README.md to install dependencies and set up.
 
 ## Start the Server
 
@@ -26,7 +14,7 @@ uvicorn opendevin.server.listen:app --reload --port 3000
 
 ## Test the Server
 
-You can use `websocat` to test the server: https://github.com/vi/websocat
+You can use [`websocat`](https://github.com/vi/websocat) to test the server.
 
 ```sh
 websocat ws://127.0.0.1:3000/ws
@@ -37,34 +25,39 @@ websocat ws://127.0.0.1:3000/ws
 
 ```sh
 LLM_API_KEY=sk-... # Your OpenAI API Key
-LLM_MODEL=gpt-4-0125-preview # Default model for the agent to use
-WORKSPACE_DIR=/path/to/your/workspace # Default path to model's workspace
+LLM_MODEL=gpt-4o   # Default model for the agent to use
+WORKSPACE_BASE=/path/to/your/workspace # Default absolute path to workspace
 ```
 
 ## API Schema
+
 There are two types of messages that can be sent to, or received from, the server:
+
 * Actions
 * Observations
 
 ### Actions
+
 An action has three parts:
+
 * `action`: The action to be taken
 * `args`: The arguments for the action
 * `message`: A friendly message that can be put in the chat log
 
 There are several kinds of actions. Their arguments are listed below.
 This list may grow over time.
+
 * `initialize` - initializes the agent. Only sent by client.
   * `model` - the name of the model to use
   * `directory` - the path to the workspace
   * `agent_cls` - the class of the agent to use
 * `start` - starts a new development task. Only sent by the client.
   * `task` - the task to start
-* `read` - reads the contents of a file.
+* `read` - reads the content of a file.
   * `path` - the path of the file to read
-* `write` - writes the contents to a file.
+* `write` - writes the content to a file.
   * `path` - the path of the file to write
-  * `contents` - the contents to write to the file
+  * `content` - the content to write to the file
 * `run` - runs a command.
   * `command` - the command to run
   * `background` - if true, run the command in the background
@@ -79,7 +72,9 @@ This list may grow over time.
 * `finish` - agent signals that the task is completed
 
 ### Observations
+
 An observation has four parts:
+
 * `observation`: The observation type
 * `content`: A string representing the observed data
 * `extras`: additional structured data
@@ -87,9 +82,10 @@ An observation has four parts:
 
 There are several kinds of observations. Their extras are listed below.
 This list may grow over time.
-* `read` - the contents of a file
+
+* `read` - the content of a file
   * `path` - the path of the file read
-* `browse` - the HTML contents of a url
+* `browse` - the HTML content of a url
   * `url` - the URL opened
 * `run` - the output of a command
   * `command` - the command run

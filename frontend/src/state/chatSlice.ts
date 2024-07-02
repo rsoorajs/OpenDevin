@@ -1,27 +1,39 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-type Message = {
-  content: string;
-  sender: "user" | "assistant";
+type SliceState = { messages: Message[] };
+
+const initialState: SliceState = {
+  messages: [],
 };
-
-const initialMessages: Message[] = [];
 
 export const chatSlice = createSlice({
   name: "chat",
-  initialState: {
-    messages: initialMessages,
-  },
+  initialState,
   reducers: {
-    appendUserMessage: (state, action) => {
-      state.messages.push({ content: action.payload, sender: "user" });
+    addUserMessage(state, action: PayloadAction<string>) {
+      const message: Message = {
+        sender: "user",
+        content: action.payload,
+      };
+
+      state.messages.push(message);
     },
-    appendAssistantMessage: (state, action) => {
-      state.messages.push({ content: action.payload, sender: "assistant" });
+
+    addAssistantMessage(state, action: PayloadAction<string>) {
+      const message: Message = {
+        sender: "assistant",
+        content: action.payload,
+      };
+
+      state.messages.push(message);
+    },
+
+    clearMessages(state) {
+      state.messages = [];
     },
   },
 });
 
-export const { appendUserMessage, appendAssistantMessage } = chatSlice.actions;
-
+export const { addUserMessage, addAssistantMessage, clearMessages } =
+  chatSlice.actions;
 export default chatSlice.reducer;

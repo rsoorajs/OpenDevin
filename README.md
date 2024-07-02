@@ -1,138 +1,136 @@
-<p align="center">
-  <img alt="OpenDevin Logo" src="./logo.png" width="150" />
-</p>
+<a name="readme-top"></a>
 
-# OpenDevin: Code Less, Make More
+<!--
+*** Thanks for checking out the Best-README-Template. If you have a suggestion
+*** that would make this better, please fork the repo and create a pull request
+*** or simply open an issue with the tag "enhancement".
+*** Don't forget to give the project a star!
+*** Thanks again! Now go create something AMAZING! :D
+-->
 
-![License](https://img.shields.io/badge/license-MIT-green)
+<!-- PROJECT SHIELDS -->
+<!--
+*** I'm using markdown "reference style" links for readability.
+*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
+*** See the bottom of this document for the declaration of the reference variables
+*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
+*** https://www.markdownguide.org/basic-syntax/#reference-style-links
+-->
 
-[demo-video.webm](https://github.com/OpenDevin/OpenDevin/assets/38853559/5b1092cc-3554-4357-a279-c2a2e9b352ad)
+<div align="center">
+  <a href="https://github.com/OpenDevin/OpenDevin/graphs/contributors"><img src="https://img.shields.io/github/contributors/opendevin/opendevin?style=for-the-badge&color=blue" alt="Contributors"></a>
+  <a href="https://github.com/OpenDevin/OpenDevin/network/members"><img src="https://img.shields.io/github/forks/opendevin/opendevin?style=for-the-badge&color=blue" alt="Forks"></a>
+  <a href="https://github.com/OpenDevin/OpenDevin/stargazers"><img src="https://img.shields.io/github/stars/opendevin/opendevin?style=for-the-badge&color=blue" alt="Stargazers"></a>
+  <a href="https://github.com/OpenDevin/OpenDevin/issues"><img src="https://img.shields.io/github/issues/opendevin/opendevin?style=for-the-badge&color=blue" alt="Issues"></a>
+  <a href="https://github.com/OpenDevin/OpenDevin/blob/main/LICENSE"><img src="https://img.shields.io/github/license/opendevin/opendevin?style=for-the-badge&color=blue" alt="MIT License"></a>
+  <br/>
+  <a href="https://join.slack.com/t/opendevin/shared_invite/zt-2i1iqdag6-bVmvamiPA9EZUu7oCO6KhA"><img src="https://img.shields.io/badge/Slack-Join%20Us-red?logo=slack&logoColor=white&style=for-the-badge" alt="Join our Slack community"></a>
+  <a href="https://discord.gg/ESHStjSjD4"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord community"></a>
+  <a href="https://codecov.io/github/opendevin/opendevin?branch=main"><img alt="CodeCov" src="https://img.shields.io/codecov/c/github/opendevin/opendevin?style=for-the-badge"></a>
+</div>
 
+<!-- PROJECT LOGO -->
+<div align="center">
+  <img src="./docs/static/img/logo.png" alt="Logo" width="200" height="200">
+  <h1 align="center">OpenDevin: Code Less, Make More</h1>
+  <a href="https://opendevin.github.io/OpenDevin/modules/usage/intro"><img src="https://img.shields.io/badge/Documentation-OpenDevin-blue?logo=googledocs&logoColor=white&style=for-the-badge" alt="Check out the documentation"></a>
+  <a href="https://huggingface.co/spaces/OpenDevin/evaluation"><img src="https://img.shields.io/badge/Evaluation-Benchmark%20on%20HF%20Space-green?style=for-the-badge" alt="Evaluation Benchmark"></a>
+</div>
+<hr>
 
-## Mission 🎯
-Welcome to OpenDevin, an open-source project aiming to replicate [Devin](https://www.cognition-labs.com/introducing-devin), an autonomous AI software engineer who is capable of executing complex engineering tasks and collaborating actively with users on software development projects. This project aspires to replicate, enhance, and innovate upon Devin through the power of the open-source community.
+Welcome to OpenDevin, a platform for autonomous software engineers, powered by AI and LLMs.
 
-## Work in Progress
+OpenDevin agents collaborate with human developers to write code, fix bugs, and ship features.
 
-OpenDevin is still a work in progress. But you can run the alpha version to see things working end-to-end.
+![App screenshot](./docs/static/img/screenshot.png)
 
-### Requirements
-* Linux, Mac OS, or [WSL on Windows](https://learn.microsoft.com/en-us/windows/wsl/install)
-* [Docker](https://docs.docker.com/engine/install/)
-* [Python](https://www.python.org/downloads/) >= 3.10
-* [NodeJS](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) >= 14.8
+## ⚡ Getting Started
+The easiest way to run OpenDevin is inside a Docker container. It works best with the most recent version of Docker, `26.0.0`.
+You must be using Linux, Mac OS, or WSL on Windows.
 
-### Installation
-First, pull our latest sandbox image [here](https://github.com/opendevin/OpenDevin/pkgs/container/sandbox)
+To start OpenDevin in a docker container, run the following commands in your terminal:
+
+> [!WARNING]
+> When you run the following command, files in `./workspace` may be modified or deleted.
+
 ```bash
-docker pull ghcr.io/opendevin/sandbox
-```
-Note: you need to be able to [run `docker` without sudo](https://docs.docker.com/engine/install/linux-postinstall/)
-
-Then copy `config.toml.template` to `config.toml`. Add an OpenAI API key to `config.toml`,
-or see below for how to use different models.
-```toml
-LLM_API_KEY="sk-..."
-```
-
-Next, start the backend:
-```bash
-python -m pip install pipenv
-python -m pipenv install -v
-python -m pipenv shell
-uvicorn opendevin.server.listen:app --port 3000
-```
-If `pipenv` doesn't work for you, you can also run:
-```
-python -m pipenv requirements > requirements.txt && python -m pip install -r requirements.txt
+WORKSPACE_BASE=$(pwd)/workspace
+docker run -it \
+    --pull=always \
+    -e SANDBOX_USER_ID=$(id -u) \
+    -e WORKSPACE_MOUNT_PATH=$WORKSPACE_BASE \
+    -v $WORKSPACE_BASE:/opt/workspace_base \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -p 3000:3000 \
+    --add-host host.docker.internal:host-gateway \
+    --name opendevin-app-$(date +%Y%m%d%H%M%S) \
+    ghcr.io/opendevin/opendevin:0.7
 ```
 
-Then, in a second terminal, start the frontend:
-```bash
-cd frontend
-npm install
-npm start
-```
-You'll see OpenDevin running at localhost:3001
+You'll find OpenDevin running at [http://localhost:3000](http://localhost:3000) with access to `./workspace`. To have OpenDevin operate on your code, place it in `./workspace`.
 
-### Picking a Model
-We use LiteLLM, so you can run OpenDevin with any foundation model, including OpenAI, Claude, and Gemini.
-LiteLLM has a [full list of providers](https://docs.litellm.ai/docs/providers).
+OpenDevin will only have access to this workspace folder. The rest of your system will not be affected as it runs in a secured docker sandbox.
 
-To change the model, set the `LLM_MODEL` and `LLM_API_KEY` in `config.toml`.
+## 🚀 Documentation
 
-For example, to run Claude:
-```toml
-LLM_API_KEY="your-api-key"
-LLM_MODEL="claude-3-opus-20240229"
-```
+To learn more about the project, and for tips on using OpenDevin,
+**check out our [documentation](https://opendevin.github.io/OpenDevin/modules/usage/intro)**.
 
-You can also set the base URL for local/custom models:
-```toml
-LLM_BASE_URL="https://localhost:3000"
-```
+There you'll find resources on how to use different LLM providers (like ollama and Anthropic's Claude),
+troubleshooting resources, and advanced configuration options.
 
-And you can customize which embeddings are used for the vector database storage:
-```toml
-LLM_EMBEDDING_MODEL="llama2" # can be "llama2", "openai", "azureopenai", or "local"
-```
+## 🤝 How to Contribute
 
-### Running on the Command Line
-You can run OpenDevin from your command line:
-```bash
-PYTHONPATH=`pwd` python opendevin/main.py -d ./workspace/ -i 100 -t "Write a bash script that prints 'hello world'"
-```
+OpenDevin is a community-driven project, and we welcome contributions from everyone.
+Whether you're a developer, a researcher, or simply enthusiastic about advancing the field of
+software engineering with AI, there are many ways to get involved:
 
-## 🤔 What is [Devin](https://www.cognition-labs.com/introducing-devin)?
-
-Devin represents a cutting-edge autonomous agent designed to navigate the complexities of software engineering. It leverages a combination of tools such as a shell, code editor, and web browser, showcasing the untapped potential of LLMs in software development. Our goal is to explore and expand upon Devin's capabilities, identifying both its strengths and areas for improvement, to guide the progress of open code models.
-
-## 🐚 Why OpenDevin?
-
-The OpenDevin project is born out of a desire to replicate, enhance, and innovate beyond the original Devin model. By engaging the open-source community, we aim to tackle the challenges faced by Code LLMs in practical scenarios, producing works that significantly contribute to the community and pave the way for future advancements.
-
-## ⭐️ Research Strategy
-
-Achieving full replication of production-grade applications with LLMs is a complex endeavor. Our strategy involves:
-
-1. **Core Technical Research:** Focusing on foundational research to understand and improve the technical aspects of code generation and handling.
-2. **Specialist Abilities:** Enhancing the effectiveness of core components through data curation, training methods, and more.
-3. **Task Planning:** Developing capabilities for bug detection, codebase management, and optimization.
-4. **Evaluation:** Establishing comprehensive evaluation metrics to better understand and improve our models.
-
-
-## 🛠 Technology Stack
-
-- **Sandboxing Environment:** Ensuring safe execution of code using technologies like Docker and Kubernetes.
-- **Frontend Interface:** Developing user-friendly interfaces for monitoring progress and interacting with Devin, potentially leveraging frameworks like React or creating a VSCode plugin for a more integrated experience.
-
-## 🚀 Next Steps
-
-An MVP demo is urgent for us. Here are the most important things to do:
-
-- UI: a chat interface, a shell demonstrating commands, a browser, etc.
-- Architecture: an agent framework with a stable backend, which can read, write and run simple commands
-- Agent: capable of generating bash scripts, running tests, etc.
-- Evaluation: a minimal evaluation pipeline that is consistent with Devin's evaluation.
-
-After finishing building the MVP, we will move towards research in different topics, including foundation models, specialist capabilities, evaluation, agent studies, etc.
-
-
-## How to Contribute
-
-OpenDevin is a community-driven project, and we welcome contributions from everyone. Whether you're a developer, a researcher, or simply enthusiastic about advancing the field of software engineering with AI, there are many ways to get involved:
-
-- **Code Contributions:** Help us develop the core functionalities, frontend interface, or sandboxing solutions.
+- **Code Contributions:** Help us develop new agents, core functionality, the frontend and other interfaces, or sandboxing solutions.
 - **Research and Evaluation:** Contribute to our understanding of LLMs in software engineering, participate in evaluating the models, or suggest improvements.
 - **Feedback and Testing:** Use the OpenDevin toolset, report bugs, suggest features, or provide feedback on usability.
 
-For details, please check [this document](./CONTRIBUTING.md).
+For details, please check [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Join Us
-We use Slack to discuss. Feel free to fill in the [form](https://forms.gle/758d5p6Ve8r2nxxq6) if you would like to join the Slack organization of OpenDevin. We will reach out shortly if we feel you are a good fit to the current team! 
+## 🤖 Join Our Community
 
-Stay updated on OpenDevin's progress, share your ideas, and collaborate with fellow enthusiasts and experts. Together, we can make significant strides towards simplifying software engineering tasks and creating more efficient, powerful tools for developers everywhere.
+Whether you're a developer, a researcher, or simply enthusiastic about OpenDevin, we'd love to have you in our community.
+Let's make software engineering better together!
 
-🐚 **Code less, make more with OpenDevin.**
+- [Slack workspace](https://join.slack.com/t/opendevin/shared_invite/zt-2jsrl32uf-fTeeFjNyNYxqSZt5NPY3fA) - Here we talk about research, architecture, and future development.
+- [Discord server](https://discord.gg/ESHStjSjD4) - This is a community-run server for general discussion, questions, and feedback.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=OpenDevin/OpenDevin&type=Date)](https://star-history.com/#OpenDevin/OpenDevin&Date)
+## 📈 Progress
+
+<p align="center">
+  <a href="https://star-history.com/#OpenDevin/OpenDevin&Date">
+    <img src="https://api.star-history.com/svg?repos=OpenDevin/OpenDevin&type=Date" width="500" alt="Star History Chart">
+  </a>
+</p>
+
+## 📜 License
+
+Distributed under the MIT License. See [`LICENSE`](./LICENSE) for more information.
+
+[contributors-shield]: https://img.shields.io/github/contributors/opendevin/opendevin?style=for-the-badge
+[contributors-url]: https://github.com/OpenDevin/OpenDevin/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/opendevin/opendevin?style=for-the-badge
+[forks-url]: https://github.com/OpenDevin/OpenDevin/network/members
+[stars-shield]: https://img.shields.io/github/stars/opendevin/opendevin?style=for-the-badge
+[stars-url]: https://github.com/OpenDevin/OpenDevin/stargazers
+[issues-shield]: https://img.shields.io/github/issues/opendevin/opendevin?style=for-the-badge
+[issues-url]: https://github.com/OpenDevin/OpenDevin/issues
+[license-shield]: https://img.shields.io/github/license/opendevin/opendevin?style=for-the-badge
+[license-url]: https://github.com/OpenDevin/OpenDevin/blob/main/LICENSE
+
+## 📚 Cite
+
+```
+@misc{opendevin2024,
+  author       = {{OpenDevin Team}},
+  title        = {{OpenDevin: An Open Platform for AI Software Developers as Generalist Agents}},
+  year         = {2024},
+  version      = {v1.0},
+  howpublished = {\url{https://github.com/OpenDevin/OpenDevin}},
+  note         = {Accessed: ENTER THE DATE YOU ACCESSED THE PROJECT}
+}
+```
