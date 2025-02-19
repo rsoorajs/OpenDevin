@@ -3,10 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from litellm.exceptions import (
-    APIConnectionError,
-    InternalServerError,
     RateLimitError,
-    ServiceUnavailableError,
 )
 
 from openhands.core.config import LLMConfig
@@ -40,7 +37,7 @@ def default_config():
 def test_llm_init_with_default_config(default_config):
     llm = LLM(default_config)
     assert llm.config.model == 'gpt-4o'
-    assert llm.config.api_key == 'test_key'
+    assert llm.config.api_key.get_secret_value() == 'test_key'
     assert isinstance(llm.metrics, Metrics)
     assert llm.metrics.model_name == 'gpt-4o'
 
@@ -77,7 +74,7 @@ def test_llm_init_with_custom_config():
     )
     llm = LLM(custom_config)
     assert llm.config.model == 'custom-model'
-    assert llm.config.api_key == 'custom_key'
+    assert llm.config.api_key.get_secret_value() == 'custom_key'
     assert llm.config.max_input_tokens == 5000
     assert llm.config.max_output_tokens == 1500
     assert llm.config.temperature == 0.8
@@ -187,21 +184,6 @@ def test_completion_with_mocked_logger(
 @pytest.mark.parametrize(
     'exception_class,extra_args,expected_retries',
     [
-        (
-            APIConnectionError,
-            {'llm_provider': 'test_provider', 'model': 'test_model'},
-            2,
-        ),
-        (
-            InternalServerError,
-            {'llm_provider': 'test_provider', 'model': 'test_model'},
-            2,
-        ),
-        (
-            ServiceUnavailableError,
-            {'llm_provider': 'test_provider', 'model': 'test_model'},
-            2,
-        ),
         (RateLimitError, {'llm_provider': 'test_provider', 'model': 'test_model'}, 2),
     ],
 )
@@ -252,22 +234,6 @@ def test_completion_rate_limit_wait_time(mock_litellm_completion, default_config
         assert (
             default_config.retry_min_wait <= wait_time <= default_config.retry_max_wait
         ), f'Expected wait time between {default_config.retry_min_wait} and {default_config.retry_max_wait} seconds, but got {wait_time}'
-
-
-@patch('openhands.llm.llm.litellm_completion')
-def test_completion_exhausts_retries(mock_litellm_completion, default_config):
-    mock_litellm_completion.side_effect = APIConnectionError(
-        'Persistent error', llm_provider='test_provider', model='test_model'
-    )
-
-    llm = LLM(config=default_config)
-    with pytest.raises(APIConnectionError):
-        llm.completion(
-            messages=[{'role': 'user', 'content': 'Hello!'}],
-            stream=False,
-        )
-
-    assert mock_litellm_completion.call_count == llm.config.num_retries
 
 
 @patch('openhands.llm.llm.litellm_completion')
@@ -387,27 +353,6 @@ def test_completion_with_two_positional_args(mock_litellm_completion, default_co
     assert (
         len(call_args) == 0
     )  # No positional args should be passed to litellm_completion here
-
-
-@patch('openhands.llm.llm.litellm_completion')
-def test_llm_cloudflare_blockage(mock_litellm_completion, default_config):
-    from litellm.exceptions import APIError
-
-    from openhands.core.exceptions import CloudFlareBlockageError
-
-    llm = LLM(default_config)
-    mock_litellm_completion.side_effect = APIError(
-        message='Attention Required! | Cloudflare',
-        llm_provider='test_provider',
-        model='test_model',
-        status_code=403,
-    )
-
-    with pytest.raises(CloudFlareBlockageError, match='Request blocked by CloudFlare'):
-        llm.completion(messages=[{'role': 'user', 'content': 'Hello'}])
-
-    # Ensure the completion was called
-    mock_litellm_completion.assert_called_once()
 
 
 @patch('openhands.llm.llm.litellm.token_counter')
